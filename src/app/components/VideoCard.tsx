@@ -64,8 +64,20 @@ export default function VideoCard({ video }: VideoCardProps) {
           <div className="p-3">
             <div className="flex gap-2.5">
               {/* Channel Avatar */}
-              <div className={`flex-shrink-0 w-9 h-9 ${randomColor} border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_#000]`}>
-                <User className="w-4.5 h-4.5 text-black" />
+              <div className="flex-shrink-0 w-9 h-9 border-2 border-black shadow-[2px_2px_0px_0px_#000] overflow-hidden">
+                {video.channelAvatar ? (
+                  <Image
+                    src={video.channelAvatar}
+                    alt={snippet.channelTitle}
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-full h-full ${randomColor} flex items-center justify-center`}>
+                    <User className="w-4.5 h-4.5 text-black" />
+                  </div>
+                )}
               </div>
               
               <div className="flex-1 min-w-0">

@@ -1,3 +1,5 @@
+// Updated YouTube types to include channel avatars
+// src/types/youtube.ts
 export interface YouTubeVideo {
   id: string;
   snippet: {
@@ -20,6 +22,7 @@ export interface YouTubeVideo {
     likeCount: string;
     commentCount: string;
   };
+  channelAvatar?: string; // Added for channel avatar
 }
 
 export interface YouTubeSearchVideo {
@@ -49,7 +52,7 @@ export interface YouTubeSearchResponse {
   };
 }
 
-// Fixed YouTube Service with your working approach
+// Updated YouTube Service with channel avatar support
 // src/lib/youtube.ts
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
@@ -86,6 +89,29 @@ export class YouTubeService {
     return count;
   }
 
+  // NEW: Get channel details for avatars
+  static async getChannelDetails(channelIds: string[]): Promise<any[]> {
+    if (!YOUTUBE_API_KEY) {
+      throw new Error("YouTube API key is not configured");
+    }
+
+    const params = new URLSearchParams({
+      part: "snippet",
+      id: channelIds.join(","),
+      key: YOUTUBE_API_KEY,
+    });
+
+    const response = await fetch(`${YOUTUBE_API_BASE_URL}/channels?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`YouTube API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.items;
+  }
+
+  // Updated getPopularVideos with channel avatars
   static async getPopularVideos(
     maxResults: number = 24
   ): Promise<YouTubeSearchResponse> {
@@ -137,13 +163,41 @@ export class YouTubeService {
           : "0",
       }));
 
-    return {
-      items: transformedItems,
-      pageInfo: data.pageInfo,
-    };
+    // Fetch channel avatars
+    try {
+      const channelIds = transformedItems.map(
+        (video: YouTubeVideo) => video.snippet.channelId
+      );
+      const uniqueChannelIds = [...new Set(channelIds)]; // Remove duplicates
+      const channelDetails = await this.getChannelDetails(
+        uniqueChannelIds as string[]
+      );
+
+      // Add channel avatars to videos
+      const videosWithAvatars = transformedItems.map((video: YouTubeVideo) => {
+        const channel = channelDetails.find(
+          (ch) => ch.id === video.snippet.channelId
+        );
+        return {
+          ...video,
+          channelAvatar: channel?.snippet?.thumbnails?.default?.url || null,
+        };
+      });
+
+      return {
+        items: videosWithAvatars,
+        pageInfo: data.pageInfo,
+      };
+    } catch (error) {
+      console.warn("Failed to fetch channel details:", error);
+      return {
+        items: transformedItems,
+        pageInfo: data.pageInfo,
+      };
+    }
   }
 
-  // Updated search method to get video details
+  // Updated search method with channel avatars
   static async searchVideos(
     query: string = "trending",
     maxResults: number = 24
@@ -208,10 +262,41 @@ export class YouTubeService {
           })
         );
 
-        return {
-          items: transformedItems,
-          pageInfo: searchData.pageInfo,
-        };
+        // Fetch channel avatars for search results
+        try {
+          const channelIds = transformedItems.map(
+            (video: YouTubeVideo) => video.snippet.channelId
+          );
+          const uniqueChannelIds = [...new Set(channelIds)]; // Remove duplicates
+          const channelDetails = await this.getChannelDetails(
+            uniqueChannelIds as string[]
+          );
+
+          // Add channel avatars to videos
+          const videosWithAvatars = transformedItems.map(
+            (video: YouTubeVideo) => {
+              const channel = channelDetails.find(
+                (ch) => ch.id === video.snippet.channelId
+              );
+              return {
+                ...video,
+                channelAvatar:
+                  channel?.snippet?.thumbnails?.default?.url || null,
+              };
+            }
+          );
+
+          return {
+            items: videosWithAvatars,
+            pageInfo: searchData.pageInfo,
+          };
+        } catch (error) {
+          console.warn("Failed to fetch channel details for search:", error);
+          return {
+            items: transformedItems,
+            pageInfo: searchData.pageInfo,
+          };
+        }
       }
     } catch (error) {
       console.warn("Failed to fetch video details for search results:", error);
