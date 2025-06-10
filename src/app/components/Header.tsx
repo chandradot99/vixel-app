@@ -30,121 +30,117 @@ export default function Header({ onMenuClick, onSearch }: HeaderProps) {
   };
 
   const handleVoiceSearch = () => {
-    // Voice search functionality - placeholder for now
     console.log('Voice search clicked');
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-      <div className="flex items-center justify-between px-4 py-2 h-14">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-yellow-300 border-b-8 border-black">
+      <div className="flex items-center justify-between px-6 py-4 h-20">
         
         {/* Left Section - Logo and Menu */}
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuClick}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:block hidden"
+            className="p-3 bg-white border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 lg:block hidden"
             aria-label="Menu"
           >
-            <Menu className="w-5 h-5" />
+            <Menu className="w-6 h-6 text-black" />
           </button>
           
-          <Link href="/" className="flex items-center gap-1">
-            <div className="bg-red-600 rounded p-1.5">
-              <Play className="w-5 h-5 text-white fill-white" />
+          <Link href="/" className="flex items-center gap-3">
+            <div className="bg-red-500 border-4 border-black shadow-[6px_6px_0px_0px_#000] p-3">
+              <Play className="w-8 h-8 text-white fill-white" />
             </div>
-            <span className="font-bold text-xl hidden sm:block">Vixel</span>
+            <span className="font-black text-4xl text-black uppercase tracking-wider hidden sm:block transform -skew-x-12">
+              VIXEL
+            </span>
           </Link>
         </div>
 
         {/* Center Section - Search */}
-        <div className="flex-1 max-w-2xl mx-4">
-          <form onSubmit={handleSearch} className="flex items-center">
-            <div className="flex flex-1 border border-gray-300 rounded-l-full overflow-hidden focus-within:border-blue-500">
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2 outline-none text-sm"
-              />
-            </div>
+        <div className="flex-1 max-w-2xl mx-6">
+          <form onSubmit={handleSearch} className="flex items-center gap-0">
+            <input
+              type="text"
+              placeholder="SEARCH VIXEL..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-6 py-4 text-lg font-bold bg-white border-4 border-black border-r-0 outline-none text-black placeholder-gray-500 uppercase"
+            />
             <button
               type="submit"
-              className="px-6 py-2 bg-gray-50 border border-l-0 border-gray-300 rounded-r-full hover:bg-gray-100 transition-colors"
+              className="px-8 py-4 bg-blue-500 border-4 border-black text-white font-black uppercase tracking-wide shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
               aria-label="Search"
             >
-              <Search className="w-5 h-5 text-gray-600" />
+              <Search className="w-6 h-6" />
             </button>
             <button
               type="button"
               onClick={handleVoiceSearch}
-              className="ml-2 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="ml-3 p-4 bg-green-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
               aria-label="Voice search"
             >
-              <Mic className="w-5 h-5 text-gray-600" />
+              <Mic className="w-6 h-6 text-black" />
             </button>
           </form>
         </div>
 
         {/* Right Section - User Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Create button */}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block">
-            <Plus className="w-5 h-5" />
+          <button className="p-4 bg-purple-500 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 hidden sm:block">
+            <Plus className="w-6 h-6 text-white" />
           </button>
 
           {/* Notifications */}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-600 rounded-full"></span>
+          <button className="p-4 bg-orange-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 relative">
+            <Bell className="w-6 h-6 text-black" />
+            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 border-2 border-black"></span>
           </button>
 
           {/* User Profile */}
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 bg-pink-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150"
             >
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-black flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
               </div>
             </button>
 
             {/* User Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-12 w-64 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-10">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-white" />
+              <div className="absolute right-0 top-20 w-80 bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] z-10">
+                <div className="px-6 py-4 bg-cyan-300 border-b-4 border-black">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-black flex items-center justify-center border-2 border-black">
+                      <User className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <div className="font-medium">John Doe</div>
-                      <div className="text-sm text-gray-600">@johndoe</div>
+                      <div className="font-black text-lg uppercase">JOHN DOE</div>
+                      <div className="font-bold text-sm uppercase">@JOHNDOE</div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="py-1">
+                <div>
                   <Link 
                     href="/channel" 
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-yellow-200 transition-colors font-black uppercase tracking-wide border-b-2 border-black"
                   >
-                    <User className="w-5 h-5" />
-                    Your channel
+                    <User className="w-6 h-6" />
+                    YOUR CHANNEL
                   </Link>
                   <Link 
                     href="/settings" 
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-yellow-200 transition-colors font-black uppercase tracking-wide border-b-2 border-black"
                   >
-                    <Settings className="w-5 h-5" />
-                    Settings
+                    <Settings className="w-6 h-6" />
+                    SETTINGS
                   </Link>
-                </div>
-                
-                <div className="border-t border-gray-100 pt-1">
-                  <button className="w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors">
-                    Sign out
+                  <button className="w-full text-left px-6 py-4 hover:bg-red-200 transition-colors font-black uppercase tracking-wide">
+                    SIGN OUT
                   </button>
                 </div>
               </div>
