@@ -12,6 +12,8 @@ export interface YouTubeVideo {
     publishedAt: string;
     channelId: string;
   };
+  formattedDuration: string;
+  formattedViewCount: string;
 }
 
 export interface YouTubeSearchResponse {
