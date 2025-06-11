@@ -14,7 +14,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
       {/* Header */}
       <div className="p-4 bg-cyan-300 border-b-4 border-black">
         <h2 className="text-xl font-black uppercase tracking-wide text-black">
-          🔥 MORE BRUTAL VIDEOS
+          🔥 MORE EPIC VIDEOS
         </h2>
       </div>
       

@@ -122,7 +122,7 @@ export class YouTubeService {
     const params = new URLSearchParams({
       part: "snippet,contentDetails,statistics",
       chart: "mostPopular",
-      regionCode: "US",
+      regionCode: "IN",
       maxResults: maxResults.toString(),
       key: YOUTUBE_API_KEY,
     });
@@ -304,5 +304,333 @@ export class YouTubeService {
 
     // Fallback: return search results without details
     return searchData;
+  }
+
+  // Replace the getRelatedVideos method in YouTubeService class:
+
+  static async getRelatedVideos(
+    currentVideo: YouTubeVideo,
+    maxResults: number = 12
+  ): Promise<YouTubeSearchResponse> {
+    if (!YOUTUBE_API_KEY) {
+      throw new Error("YouTube API key is not configured");
+    }
+
+    try {
+      const currentVideoId =
+        typeof currentVideo.id === "string"
+          ? currentVideo.id
+          : currentVideo.id?.videoId;
+
+      // 🔥 PRIMARY: Use YouTube's relatedToVideoId parameter
+      // const relatedParams = new URLSearchParams({
+      //   part: "snippet",
+      //   type: "video",
+      //   relatedToVideoId: currentVideoId,
+      //   maxResults: maxResults.toString(),
+      //   key: YOUTUBE_API_KEY,
+      //   videoDuration: "medium", // Exclude shorts
+      // });
+
+      const relatedParams = new URLSearchParams({
+        part: "snippet",
+        type: "video",
+        relatedToVideoId: currentVideoId,
+        regionCode: "IN",
+        maxResults: maxResults.toString(),
+        key: YOUTUBE_API_KEY,
+      });
+
+      const relatedResponse = await fetch(
+        `${YOUTUBE_API_BASE_URL}/search?${relatedParams}`
+      );
+
+      if (relatedResponse.ok) {
+        const relatedData = await relatedResponse.json();
+
+        if (relatedData.items && relatedData.items.length > 0) {
+          // Get video details for the related videos
+          const videoIds = relatedData.items
+            .map((v: any) => v.id.videoId)
+            .join(",");
+
+          const detailsParams = new URLSearchParams({
+            part: "snippet,contentDetails,statistics",
+            id: videoIds,
+            key: YOUTUBE_API_KEY,
+          });
+
+          const detailsResponse = await fetch(
+            `${YOUTUBE_API_BASE_URL}/videos?${detailsParams}`
+          );
+
+          if (detailsResponse.ok) {
+            const detailsData = await detailsResponse.json();
+
+            // Get channel avatars
+            const channelIds = detailsData.items.map(
+              (v: any) => v.snippet.channelId
+            );
+            const uniqueChannelIds = [...new Set(channelIds)];
+            const channelDetails = await this.getChannelDetails(
+              uniqueChannelIds
+            );
+
+            // Format the videos
+            const formattedVideos = detailsData.items.map((video: any) => {
+              const channel = channelDetails.find(
+                (ch) => ch.id === video.snippet.channelId
+              );
+              return {
+                ...video,
+                formattedDuration: this.parseDuration(
+                  video.contentDetails.duration
+                ),
+                formattedViewCount: this.formatViewCount(
+                  video.statistics.viewCount
+                ),
+                channelAvatar:
+                  channel?.snippet?.thumbnails?.default?.url || null,
+              };
+            });
+
+            return {
+              items: formattedVideos,
+              pageInfo: {
+                totalResults: formattedVideos.length,
+                resultsPerPage: formattedVideos.length,
+              },
+            };
+          }
+        }
+      }
+
+      // 🔥 FALLBACK 1: If relatedToVideoId doesn't work, search by video tags/category
+      console.log("relatedToVideoId failed, trying category-based search...");
+
+      // Extract category and keywords from current video
+      const categoryParams = new URLSearchParams({
+        part: "snippet",
+        type: "video",
+        videoCategoryId: currentVideo.snippet.categoryId || "0",
+        maxResults: maxResults.toString(),
+        key: YOUTUBE_API_KEY,
+        order: "relevance",
+        videoDuration: "medium",
+        publishedAfter: new Date(
+          Date.now() - 90 * 24 * 60 * 60 * 1000
+        ).toISOString(), // Last 3 months
+      });
+
+      const categoryResponse = await fetch(
+        `${YOUTUBE_API_BASE_URL}/search?${categoryParams}`
+      );
+
+      if (categoryResponse.ok) {
+        const categoryData = await categoryResponse.json();
+
+        if (categoryData.items && categoryData.items.length > 0) {
+          // Filter out current video and get details
+          const filteredItems = categoryData.items.filter(
+            (v: any) => v.id.videoId !== currentVideoId
+          );
+
+          if (filteredItems.length > 0) {
+            const videoIds = filteredItems
+              .slice(0, maxResults)
+              .map((v: any) => v.id.videoId)
+              .join(",");
+
+            const detailsParams = new URLSearchParams({
+              part: "snippet,contentDetails,statistics",
+              id: videoIds,
+              key: YOUTUBE_API_KEY,
+            });
+
+            const detailsResponse = await fetch(
+              `${YOUTUBE_API_BASE_URL}/videos?${detailsParams}`
+            );
+
+            if (detailsResponse.ok) {
+              const detailsData = await detailsResponse.json();
+
+              // Get channel avatars and format videos
+              const channelIds = detailsData.items.map(
+                (v: any) => v.snippet.channelId
+              );
+              const uniqueChannelIds = [...new Set(channelIds)];
+              const channelDetails = await this.getChannelDetails(
+                uniqueChannelIds
+              );
+
+              const formattedVideos = detailsData.items.map((video: any) => {
+                const channel = channelDetails.find(
+                  (ch) => ch.id === video.snippet.channelId
+                );
+                return {
+                  ...video,
+                  formattedDuration: this.parseDuration(
+                    video.contentDetails.duration
+                  ),
+                  formattedViewCount: this.formatViewCount(
+                    video.statistics.viewCount
+                  ),
+                  channelAvatar:
+                    channel?.snippet?.thumbnails?.default?.url || null,
+                };
+              });
+
+              return {
+                items: formattedVideos,
+                pageInfo: {
+                  totalResults: formattedVideos.length,
+                  resultsPerPage: formattedVideos.length,
+                },
+              };
+            }
+          }
+        }
+      }
+
+      // 🔥 FALLBACK 2: Search by channel (same creator's videos)
+      console.log("Category search failed, trying channel videos...");
+
+      const channelParams = new URLSearchParams({
+        part: "snippet",
+        type: "video",
+        channelId: currentVideo.snippet.channelId,
+        maxResults: maxResults.toString(),
+        key: YOUTUBE_API_KEY,
+        order: "relevance",
+        videoDuration: "medium",
+      });
+
+      const channelResponse = await fetch(
+        `${YOUTUBE_API_BASE_URL}/search?${channelParams}`
+      );
+
+      if (channelResponse.ok) {
+        const channelData = await channelResponse.json();
+
+        // Filter out current video
+        const filteredChannelVideos = channelData.items.filter(
+          (v: any) => v.id.videoId !== currentVideoId
+        );
+
+        if (filteredChannelVideos.length > 0) {
+          const videoIds = filteredChannelVideos
+            .slice(0, maxResults)
+            .map((v: any) => v.id.videoId)
+            .join(",");
+
+          const detailsParams = new URLSearchParams({
+            part: "snippet,contentDetails,statistics",
+            id: videoIds,
+            key: YOUTUBE_API_KEY,
+          });
+
+          const detailsResponse = await fetch(
+            `${YOUTUBE_API_BASE_URL}/videos?${detailsParams}`
+          );
+
+          if (detailsResponse.ok) {
+            const detailsData = await detailsResponse.json();
+
+            const channelDetails = await this.getChannelDetails([
+              currentVideo.snippet.channelId,
+            ]);
+
+            const formattedVideos = detailsData.items.map((video: any) => ({
+              ...video,
+              formattedDuration: this.parseDuration(
+                video.contentDetails.duration
+              ),
+              formattedViewCount: this.formatViewCount(
+                video.statistics.viewCount
+              ),
+              channelAvatar:
+                channelDetails[0]?.snippet?.thumbnails?.default?.url || null,
+            }));
+
+            return {
+              items: formattedVideos,
+              pageInfo: {
+                totalResults: formattedVideos.length,
+                resultsPerPage: formattedVideos.length,
+              },
+            };
+          }
+        }
+      }
+
+      // 🔥 FINAL FALLBACK: Popular videos (excluding current)
+      console.log(
+        "All related searches failed, falling back to popular videos..."
+      );
+      const fallbackVideos = await this.getPopularVideos(maxResults);
+      return {
+        items: fallbackVideos.items.filter((v) => v.id !== currentVideoId),
+        pageInfo: fallbackVideos.pageInfo,
+      };
+    } catch (error) {
+      console.error("Error fetching related videos:", error);
+
+      // Emergency fallback
+      try {
+        const currentVideoId =
+          typeof currentVideo.id === "string"
+            ? currentVideo.id
+            : currentVideo.id?.videoId;
+        const fallbackVideos = await this.getPopularVideos(maxResults);
+        return {
+          items: fallbackVideos.items.filter((v) => v.id !== currentVideoId),
+          pageInfo: fallbackVideos.pageInfo,
+        };
+      } catch {
+        return {
+          items: [],
+          pageInfo: { totalResults: 0, resultsPerPage: 0 },
+        };
+      }
+    }
+  }
+
+  static async getVideoById(videoId: string): Promise<YouTubeVideo | null> {
+    if (!YOUTUBE_API_KEY) {
+      throw new Error("YouTube API key is not configured");
+    }
+
+    const params = new URLSearchParams({
+      part: "snippet,contentDetails,statistics",
+      id: videoId,
+      key: YOUTUBE_API_KEY,
+    });
+
+    const response = await fetch(`${YOUTUBE_API_BASE_URL}/videos?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`YouTube API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.items.length === 0) {
+      return null;
+    }
+
+    const video = data.items[0];
+
+    // Get channel avatar
+    const channelDetails = await this.getChannelDetails([
+      video.snippet.channelId,
+    ]);
+
+    return {
+      ...video,
+      formattedDuration: this.parseDuration(video.contentDetails.duration),
+      formattedViewCount: this.formatViewCount(video.statistics.viewCount),
+      channelAvatar:
+        channelDetails[0]?.snippet?.thumbnails?.default?.url || null,
+    };
   }
 }

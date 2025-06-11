@@ -6,9 +6,9 @@ import Header from '../components/Header';
 import { YouTubeService } from '../lib/youtube';
 import { YouTubeVideo } from '../types/youtube';
 import { Loader2 } from 'lucide-react';
-import VideoPlayer from '../components/VideoPlayer';
 import RelatedVideos from '../components/RelatedVideos';
 import VideoInfo from '../components/VideoInfo';
+import CustomVideoPlayer from '../components/CustomVideoPlayer';
 
 function WatchPageContent() {
   const searchParams = useSearchParams();
@@ -30,46 +30,24 @@ function WatchPageContent() {
       try {
         setLoading(true);
         setError(null);
-
-        // Fetch video details
-        const videoDetailsParams = new URLSearchParams({
-          part: 'snippet,contentDetails,statistics',
-          id: videoId,
-          key: process.env.NEXT_PUBLIC_YOUTUBE_API_KEY!,
-        });
-
-        const videoResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?${videoDetailsParams}`
-        );
-
-        if (!videoResponse.ok) {
-          throw new Error('Failed to fetch video details');
+    
+        if (!videoId) {
+          throw new Error('No video ID provided');
         }
-
-        const videoData = await videoResponse.json();
+    
+        // 🔥 Get video details using service
+        const videoInfo = await YouTubeService.getVideoById(videoId);
         
-        if (videoData.items.length === 0) {
+        if (!videoInfo) {
           throw new Error('Video not found');
         }
-
-        const videoInfo = videoData.items[0];
-        
-        // Get channel avatar
-        const channelDetails = await YouTubeService.getChannelDetails([videoInfo.snippet.channelId]);
-        
-        const videoWithFormatting = {
-          ...videoInfo,
-          formattedDuration: YouTubeService.parseDuration(videoInfo.contentDetails.duration),
-          formattedViewCount: YouTubeService.formatViewCount(videoInfo.statistics.viewCount),
-          channelAvatar: channelDetails[0]?.snippet?.thumbnails?.default?.url || null
-        };
-
-        setVideo(videoWithFormatting);
-
-        // Fetch related videos
-        const relatedVideosData = await YouTubeService.getPopularVideos(12);
+    
+        setVideo(videoInfo);
+    
+        // 🔥 Get related videos using service  
+        const relatedVideosData = await YouTubeService.getRelatedVideos(videoInfo, 24);
         setRelatedVideos(relatedVideosData.items);
-
+    
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load video');
         console.error('Error fetching video:', err);
@@ -130,7 +108,7 @@ function WatchPageContent() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Video Section */}
             <div className="lg:col-span-2">
-              <VideoPlayer videoId={videoId!} video={video} />
+              <CustomVideoPlayer videoId={videoId!} video={video} relatedVideos={relatedVideos} />
               <VideoInfo video={video} />
             </div>
             
