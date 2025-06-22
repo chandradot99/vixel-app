@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { YouTubeVideo } from '@/app/types/youtube';
-import { YouTubeService } from '@/app/lib/youtube';
+import { YouTubeVideo } from '@/types/youtube';
+import { YouTubeService } from '@/lib/youtube';
 import VideoCard from './VideoCard';
 import { Loader2, AlertTriangle, Zap } from 'lucide-react';
 

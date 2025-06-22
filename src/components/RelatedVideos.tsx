@@ -3,17 +3,51 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Clock } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
 
 interface RelatedVideosProps {
   videos: YouTubeVideo[];
 }
 
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
+  const { theme, classes } = useTheme();
+
+  // Theme-aware helper functions
+  const getHeaderBg = () => {
+    if (theme === 'dark') return 'bg-blue-700';
+    if (theme === 'light') return 'bg-blue-100';
+    return 'bg-cyan-300';
+  };
+
+  const getVideoCardHover = () => {
+    if (theme === 'dark') return 'hover:bg-gray-700';
+    if (theme === 'light') return 'hover:bg-gray-50';
+    return 'hover:bg-yellow-100';
+  };
+
+  const getTitleHover = () => {
+    if (theme === 'dark') return 'group-hover:text-blue-400';
+    if (theme === 'light') return 'group-hover:text-blue-600';
+    return 'group-hover:text-red-600';
+  };
+
+  const getChannelAvatarBg = () => {
+    if (theme === 'dark') return 'bg-purple-600';
+    if (theme === 'light') return 'bg-purple-500';
+    return 'bg-blue-400';
+  };
+
+  const getDurationBadgeBg = () => {
+    if (theme === 'dark') return 'bg-red-700 border-gray-600';
+    if (theme === 'light') return 'bg-red-600 border-gray-400';
+    return 'bg-red-500 border-black';
+  };
+
   return (
-    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000]">
+    <div className={`${classes.cardBg} ${classes.borderThick} ${classes.shadowLarge}`}>
       {/* Header */}
-      <div className="p-4 bg-cyan-300 border-b-4 border-black">
-        <h2 className="text-xl font-black uppercase tracking-wide text-black">
+      <div className={`p-4 ${getHeaderBg()} border-b-4 ${classes.border}`}>
+        <h2 className={`text-xl font-black uppercase tracking-wide ${classes.primaryText}`}>
           🔥 MORE EPIC VIDEOS
         </h2>
       </div>
@@ -32,9 +66,9 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
               href={`/watch?v=${videoId}`}
               className="block group"
             >
-              <div className="flex gap-3 p-3 border-2 border-black hover:bg-yellow-100 transition-colors duration-150">
+              <div className={`flex gap-3 p-3 border-2 ${classes.border} ${getVideoCardHover()} transition-colors duration-150`}>
                 {/* Thumbnail */}
-                <div className="relative w-32 h-20 flex-shrink-0 border-2 border-black overflow-hidden">
+                <div className={`relative w-32 h-20 flex-shrink-0 border-2 ${classes.border} overflow-hidden`}>
                   <Image
                     src={video.snippet.thumbnails.medium.url}
                     alt={video.snippet.title}
@@ -42,7 +76,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                     className="object-cover"
                     sizes="128px"
                   />
-                  <div className="absolute bottom-1 right-1 bg-red-500 text-white text-xs px-1 py-0.5 font-black border border-black">
+                  <div className={`absolute bottom-1 right-1 ${getDurationBadgeBg()} text-white text-xs px-1 py-0.5 font-black border`}>
                     <Clock className="w-2 h-2 inline mr-1" />
                     {(video as any).formattedDuration || '0:00'}
                   </div>
@@ -50,7 +84,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-black text-black text-sm leading-tight mb-2 uppercase tracking-wide line-clamp-2 group-hover:text-red-600 transition-colors">
+                  <h3 className={`font-black ${classes.primaryText} text-sm leading-tight mb-2 uppercase tracking-wide line-clamp-2 ${getTitleHover()} transition-colors`}>
                     {video.snippet.title.length > 60 
                       ? `${video.snippet.title.substring(0, 60)}...`
                       : video.snippet.title
@@ -58,7 +92,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                   </h3>
                   
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 border border-black overflow-hidden flex-shrink-0">
+                    <div className={`w-6 h-6 border ${classes.border} overflow-hidden flex-shrink-0`}>
                       {(video as any).channelAvatar ? (
                         <Image
                           src={(video as any).channelAvatar}
@@ -68,17 +102,17 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-blue-400 flex items-center justify-center">
-                          <User className="w-3 h-3 text-black" />
+                        <div className={`w-full h-full ${getChannelAvatarBg()} flex items-center justify-center`}>
+                          <User className={`w-3 h-3 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} />
                         </div>
                       )}
                     </div>
-                    <p className="text-black text-xs font-bold uppercase truncate">
+                    <p className={`${classes.primaryText} text-xs font-bold uppercase truncate`}>
                       {video.snippet.channelTitle}
                     </p>
                   </div>
                   
-                  <p className="text-gray-700 text-xs font-bold uppercase">
+                  <p className={`${classes.secondaryText} text-xs font-bold uppercase`}>
                     {(video as any).formattedViewCount || '0'} VIEWS • {publishedDate.toUpperCase()}
                   </p>
                 </div>

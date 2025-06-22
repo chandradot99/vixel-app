@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+.line-clamp-2 {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+:root {
+  --brutalist-yellow: #FFFF00;
+  --brutalist-red: #FF0000;
+  --brutalist-blue: #0000FF;
+  --brutalist-green: #00FF00;
+  --brutalist-black: #000000;
+  --brutalist-white: #FFFFFF;
+}
+
+.theme-brutal {
+  --primary-bg: var(--brutalist-yellow);
+  --secondary-bg: var(--brutalist-white);
+  --accent-color: var(--brutalist-red);
+  --text-color: var(--brutalist-black);
+  --border-color: var(--brutalist-black);
+}
+
+.theme-dark {
+  --primary-bg: #1a1a1a;
+  --secondary-bg: #2a2a2a;
+  --accent-color: #3b82f6;
+  --text-color: #ffffff;
+  --border-color: #404040;
+}
+
+.theme-light {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8f9fa;
+  --accent-color: #3b82f6;
+  --text-color: #1a1a1a;
+  --border-color: #e5e7eb;
+}
+
+.theme-dark .bg-yellow-300 {
+  background-color: var(--primary-bg) !important;
+}
+
+.theme-dark .border-black {
+  border-color: var(--border-color) !important;
+}
+
+.theme-dark .text-black {
+  color: var(--text-color) !important;
+}
+
+.theme-light .bg-yellow-300 {
+  background-color: var(--secondary-bg) !important;
+}
+
+.theme-light .border-black {
+  border-color: var(--border-color) !important;
+}
+
+.theme-light .text-black {
+  color: var(--text-color) !important;
+}
+
+/* Accessibility Options */
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.font-size-small {
+  font-size: 0.875rem;
+}
+
+.font-size-medium {
+  font-size: 1rem;
+}
+
+.font-size-large {
+  font-size: 1.125rem;
+}
+
+/* Button cursor styles */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* For any elements with button-like behavior */
+[role="button"] {
+  cursor: pointer;
+}

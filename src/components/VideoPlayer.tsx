@@ -1,6 +1,6 @@
 'use client';
 
-import { YouTubeVideo } from '../types/youtube';
+import { YouTubeVideo } from '@/types/youtube';
 
 interface VideoPlayerProps {
   videoId: string;

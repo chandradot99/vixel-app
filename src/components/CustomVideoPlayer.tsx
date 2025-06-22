@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { YouTubeVideo } from '../types/youtube';
+import { YouTubeVideo } from '@/types/youtube';
+import { useTheme } from '@/hooks/useTheme';
 import { 
   Play, 
   Pause, 
@@ -35,6 +36,7 @@ export default function CustomVideoPlayer({
   relatedVideos = [] 
 }: CustomVideoPlayerProps) {
   const router = useRouter();
+  const { theme, classes } = useTheme();
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -306,12 +308,54 @@ export default function CustomVideoPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Theme-aware helper functions
+  const getProgressBarColors = () => {
+    if (theme === 'dark') return { bg: 'bg-gray-700', progress: 'bg-blue-500', border: 'border-gray-500' };
+    if (theme === 'light') return { bg: 'bg-gray-300', progress: 'bg-blue-500', border: 'border-gray-400' };
+    return { bg: 'bg-gray-800', progress: 'bg-yellow-400', border: 'border-white' };
+  };
+
+  const getVolumeBarColors = () => {
+    if (theme === 'dark') return { bg: 'bg-gray-700', volume: 'bg-green-500', border: 'border-gray-500' };
+    if (theme === 'light') return { bg: 'bg-gray-300', volume: 'bg-green-500', border: 'border-gray-400' };
+    return { bg: 'bg-gray-800', volume: 'bg-green-400', border: 'border-white' };
+  };
+
+  const getControlButtonColors = () => {
+    if (theme === 'dark') {
+      return {
+        primary: 'bg-red-600 hover:bg-red-700',
+        secondary: 'bg-blue-600 hover:bg-blue-700',
+        success: 'bg-green-600 hover:bg-green-700',
+        warning: 'bg-orange-600 hover:bg-orange-700'
+      };
+    }
+    if (theme === 'light') {
+      return {
+        primary: 'bg-red-500 hover:bg-red-600',
+        secondary: 'bg-blue-500 hover:bg-blue-600',
+        success: 'bg-green-500 hover:bg-green-600',
+        warning: 'bg-orange-500 hover:bg-orange-600'
+      };
+    }
+    return {
+      primary: 'bg-red-500 hover:bg-red-600',
+      secondary: 'bg-blue-400 hover:bg-blue-500',
+      success: 'bg-green-400 hover:bg-green-500',
+      warning: 'bg-orange-400 hover:bg-orange-500'
+    };
+  };
+
+  const progressColors = getProgressBarColors();
+  const volumeColors = getVolumeBarColors();
+  const buttonColors = getControlButtonColors();
+
   return (
-    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] mb-6 relative">
+    <div className={`${classes.cardBg} ${classes.borderThick} ${classes.shadowLarge} mb-6 relative`}>
       {/* Video Player Container */}
       <div 
         ref={containerRef}
-        className={`relative bg-black border-b-4 border-black overflow-hidden ${
+        className={`relative bg-black border-b-4 ${classes.border} overflow-hidden ${
           isFullscreen 
             ? 'fixed inset-0 z-50 w-screen h-screen' 
             : 'aspect-video'
@@ -322,10 +366,10 @@ export default function CustomVideoPlayer({
         {/* Loading State */}
         {isLoading && (
           <div className="absolute inset-0 bg-black flex items-center justify-center z-20">
-            <div className="bg-yellow-300 border-4 border-white shadow-[8px_8px_0px_0px_#fff] p-6">
+            <div className={`${theme === 'brutal' ? 'bg-yellow-300' : theme === 'dark' ? 'bg-gray-800' : 'bg-white'} ${classes.borderThick} ${theme === 'brutal' ? 'shadow-[8px_8px_0px_0px_#fff]' : classes.shadowLarge} p-6`}>
               <div className="flex items-center gap-4">
-                <Loader2 className="w-8 h-8 animate-spin text-black" strokeWidth={4} />
-                <span className="text-xl font-black uppercase text-black">
+                <Loader2 className={`w-8 h-8 animate-spin ${classes.primaryText}`} strokeWidth={4} />
+                <span className={`text-xl font-black uppercase ${classes.primaryText}`}>
                   LOADING EPIC VIDEO...
                 </span>
               </div>
@@ -339,13 +383,13 @@ export default function CustomVideoPlayer({
         {/* Autoplay Overlay */}
         {showAutoplayOverlay && nextVideo && (
           <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-30">
-            <div className="bg-yellow-300 border-6 border-white shadow-[12px_12px_0px_0px_#fff] p-8 max-w-md text-center transform rotate-2">
-              <h3 className="text-3xl font-black uppercase text-black mb-6">
+            <div className={`${theme === 'brutal' ? 'bg-yellow-300' : theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border-6 ${theme === 'brutal' ? 'border-white shadow-[12px_12px_0px_0px_#fff]' : `${classes.border} ${classes.shadowLarge}`} p-8 max-w-md text-center ${theme === 'brutal' ? 'transform rotate-2' : ''}`}>
+              <h3 className={`text-3xl font-black uppercase ${classes.primaryText} mb-6`}>
                 NEXT EPIC VIDEO IN {countdown}!
               </h3>
               
-              <div className="bg-white border-4 border-black p-4 mb-6 transform -rotate-2">
-                <div className="relative w-full h-32 border-2 border-black mb-3 overflow-hidden">
+              <div className={`${classes.cardBg} ${classes.borderThick} p-4 mb-6 ${theme === 'brutal' ? 'transform -rotate-2' : ''}`}>
+                <div className={`relative w-full h-32 ${classes.border} border-2 mb-3 overflow-hidden`}>
                   <Image 
                     src={nextVideo.snippet.thumbnails.medium.url}
                     alt={nextVideo.snippet.title}
@@ -354,7 +398,7 @@ export default function CustomVideoPlayer({
                     sizes="(max-width: 768px) 100vw, 400px"
                   />
                 </div>
-                <p className="font-black text-lg uppercase text-black leading-tight">
+                <p className={`font-black text-lg uppercase ${classes.primaryText} leading-tight`}>
                   {nextVideo.snippet.title.length > 40 
                     ? `${nextVideo.snippet.title.substring(0, 40)}...`
                     : nextVideo.snippet.title
@@ -365,13 +409,13 @@ export default function CustomVideoPlayer({
               <div className="flex gap-4">
                 <button
                   onClick={playNextVideo}
-                  className="flex-1 bg-green-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 py-3 px-6 font-black text-lg uppercase"
+                  className={`flex-1 ${theme === 'brutal' ? 'bg-green-400' : 'bg-green-500'} ${classes.borderThick} ${classes.shadow} ${classes.hoverShadow} hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 py-3 px-6 font-black text-lg uppercase ${theme === 'brutal' ? 'text-black' : 'text-white'}`}
                 >
                   WATCH NOW!
                 </button>
                 <button
                   onClick={cancelAutoplay}
-                  className="flex-1 bg-red-400 border-4 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 py-3 px-6 font-black text-lg uppercase"
+                  className={`flex-1 ${theme === 'brutal' ? 'bg-red-400' : 'bg-red-500'} ${classes.borderThick} ${classes.shadow} ${classes.hoverShadow} hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 py-3 px-6 font-black text-lg uppercase ${theme === 'brutal' ? 'text-black' : 'text-white'}`}
                 >
                   CANCEL
                 </button>
@@ -386,15 +430,15 @@ export default function CustomVideoPlayer({
             {/* Progress Bar */}
             <div className="mb-4">
               <div 
-                className="w-full h-4 bg-gray-800 border-2 border-white cursor-pointer relative"
+                className={`w-full h-4 ${progressColors.bg} border-2 ${progressColors.border} cursor-pointer relative`}
                 onClick={handleProgressClick}
               >
                 <div 
-                  className="h-full bg-yellow-400 border-r-2 border-white transition-all duration-300"
+                  className={`h-full ${progressColors.progress} border-r-2 ${progressColors.border} transition-all duration-300`}
                   style={{ width: `${(currentTime / duration) * 100}%` }}
                 />
                 <div 
-                  className="absolute top-0 w-6 h-6 bg-white border-2 border-black shadow-[3px_3px_0px_0px_#000] transform -translate-y-1 cursor-grab active:cursor-grabbing"
+                  className={`absolute top-0 w-6 h-6 ${classes.cardBg} ${classes.border} border-2 ${classes.shadow} transform -translate-y-1 cursor-grab active:cursor-grabbing`}
                   style={{ left: `calc(${(currentTime / duration) * 100}% - 12px)` }}
                 />
               </div>
@@ -409,14 +453,14 @@ export default function CustomVideoPlayer({
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => skipTime(-10)}
-                  className="p-3 bg-blue-400 border-2 border-black shadow-[3px_3px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-pointer"
+                  className={`p-3 ${buttonColors.secondary} ${classes.border} border-2 ${classes.shadow} hover:shadow-[1px_1px_0px_0px_${theme === 'brutal' ? '#000' : theme === 'dark' ? '#374151' : '#e5e7eb'}] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150`}
                 >
-                  <SkipBack className="w-6 h-6 text-black" />
+                  <SkipBack className={`w-6 h-6 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} />
                 </button>
                 
                 <button 
                   onClick={togglePlay}
-                  className="p-4 bg-red-500 border-2 border-black shadow-[4px_4px_0px_0px_#000] hover:shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-pointer"
+                  className={`p-4 ${buttonColors.primary} ${classes.border} border-2 ${classes.shadow} hover:shadow-[2px_2px_0px_0px_${theme === 'brutal' ? '#000' : theme === 'dark' ? '#374151' : '#e5e7eb'}] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150`}
                 >
                   {isPlaying ? 
                     <Pause className="w-8 h-8 text-white fill-white" /> : 
@@ -426,25 +470,25 @@ export default function CustomVideoPlayer({
                 
                 <button 
                   onClick={() => skipTime(10)}
-                  className="p-3 bg-blue-400 border-2 border-black shadow-[3px_3px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150 cursor-pointer"
+                  className={`p-3 ${buttonColors.secondary} ${classes.border} border-2 ${classes.shadow} hover:shadow-[1px_1px_0px_0px_${theme === 'brutal' ? '#000' : theme === 'dark' ? '#374151' : '#e5e7eb'}] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-150`}
                 >
-                  <SkipForward className="w-6 h-6 text-black" />
+                  <SkipForward className={`w-6 h-6 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} />
                 </button>
 
                 {/* Volume Control */}
                 <div className="flex items-center gap-3 ml-6">
                   <button 
                     onClick={toggleMute}
-                    className="p-2 bg-green-400 border-2 border-black shadow-[2px_2px_0px_0px_#000]"
+                    className={`p-2 ${buttonColors.success} ${classes.border} border-2 ${classes.shadow}`}
                   >
                     {isMuted ? 
-                      <VolumeX className="w-5 h-5 text-black" /> : 
-                      <Volume2 className="w-5 h-5 text-black" />
+                      <VolumeX className={`w-5 h-5 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} /> : 
+                      <Volume2 className={`w-5 h-5 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} />
                     }
                   </button>
-                  <div className="w-24 h-3 bg-gray-800 border-2 border-white relative">
+                  <div className={`w-24 h-3 ${volumeColors.bg} border-2 ${volumeColors.border} relative`}>
                     <div 
-                      className="h-full bg-green-400"
+                      className={`h-full ${volumeColors.volume}`}
                       style={{ width: `${volume}%` }}
                     />
                     <input
@@ -466,10 +510,10 @@ export default function CustomVideoPlayer({
                   <span className="font-black text-white text-sm uppercase">AUTOPLAY:</span>
                   <button
                     onClick={() => setAutoplayEnabled(!autoplayEnabled)}
-                    className={`px-3 py-2 border-2 border-black font-black text-sm uppercase transition-all duration-150 cursor-pointer ${
+                    className={`px-3 py-2 ${classes.border} border-2 font-black text-sm uppercase transition-all duration-150 ${
                       autoplayEnabled 
-                        ? 'bg-green-400 text-black shadow-[2px_2px_0px_0px_#000]' 
-                        : 'bg-gray-600 text-white shadow-[2px_2px_0px_0px_#000]'
+                        ? `${buttonColors.success} ${theme === 'brutal' ? 'text-black' : 'text-white'} ${classes.shadow}` 
+                        : `bg-gray-600 text-white ${classes.shadow}`
                     }`}
                   >
                     {autoplayEnabled ? 'ON' : 'OFF'}
@@ -478,9 +522,9 @@ export default function CustomVideoPlayer({
                 
                 <button 
                   onClick={toggleFullscreen}
-                  className="p-2 bg-orange-400 border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 cursor-pointer"
+                  className={`p-2 ${buttonColors.warning} ${classes.border} border-2 ${classes.shadow} hover:shadow-[1px_1px_0px_0px_${theme === 'brutal' ? '#000' : theme === 'dark' ? '#374151' : '#e5e7eb'}] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150`}
                 >
-                  <Maximize className="w-5 h-5 text-black" />
+                  <Maximize className={`w-5 h-5 ${theme === 'brutal' ? 'text-black' : 'text-white'}`} />
                 </button>
               </div>
             </div>
@@ -490,22 +534,22 @@ export default function CustomVideoPlayer({
       
       {/* Video Info Bar - Only show when not in fullscreen */}
       {!isFullscreen && (
-        <div className="p-4 bg-gray-100 border-b-4 border-black">
+        <div className={`p-4 ${theme === 'brutal' ? 'bg-gray-100' : theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} border-b-4 ${classes.border}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-red-500 border-2 border-black px-3 py-1 text-white font-black text-sm uppercase">
+              <div className={`${theme === 'brutal' ? 'bg-red-500' : 'bg-red-600'} ${classes.border} border-2 px-3 py-1 text-white font-black text-sm uppercase`}>
                 {(video as any).formattedDuration || formatTime(duration)}
               </div>
-              <div className="bg-blue-500 border-2 border-black px-3 py-1 text-white font-black text-sm uppercase">
+              <div className={`${theme === 'brutal' ? 'bg-blue-500' : 'bg-blue-600'} ${classes.border} border-2 px-3 py-1 text-white font-black text-sm uppercase`}>
                 {(video as any).formattedViewCount || '0'} VIEWS
               </div>
             </div>
             
             <div className="flex gap-2">
-              <button className="bg-green-400 border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 px-4 py-2 font-black text-sm uppercase">
+              <button className={`${buttonColors.success} ${classes.border} border-2 ${classes.shadow} ${classes.hoverShadow} hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 px-4 py-2 font-black text-sm uppercase ${theme === 'brutal' ? 'text-black' : 'text-white'}`}>
                 👍 EPIC LIKE
               </button>
-              <button className="bg-orange-400 border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 px-4 py-2 font-black text-sm uppercase">
+              <button className={`${buttonColors.warning} ${classes.border} border-2 ${classes.shadow} ${classes.hoverShadow} hover:translate-x-[1px] hover:translate-y-[1px] transition-all duration-150 px-4 py-2 font-black text-sm uppercase ${theme === 'brutal' ? 'text-black' : 'text-white'}`}>
                 📤 SHARE NOW
               </button>
             </div>

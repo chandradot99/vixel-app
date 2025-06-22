@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { SettingsProvider } from '@/contexts/SettingsContext'
+import ThemeWrapper from '@/components/ThemeWrapper'
+import '../globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Vixel - Your Video Platform',
-  description: 'Discover and watch amazing videos on Vixel',
+  title: 'Vixel - Your Epic Video Platform',
+  description: 'Discover and watch amazing videos on Vixel - The most epic video platform',
 }
 
 export default function RootLayout({
@@ -17,9 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
-          {children}
-        </div>
+        <AuthProvider>
+          <SettingsProvider>
+            <ThemeWrapper>
+              {children}
+            </ThemeWrapper>
+          </SettingsProvider>
+        </AuthProvider>
       </body>
     </html>
   )
