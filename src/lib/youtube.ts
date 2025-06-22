@@ -19,7 +19,7 @@ export class YouTubeService {
   private static buildApiUrl(
     endpoint: string,
     params: URLSearchParams,
-    user?: User
+    user?: User | null
   ): string {
     if (YOUTUBE_API_KEY) {
       params.set("key", YOUTUBE_API_KEY);
@@ -154,7 +154,7 @@ export class YouTubeService {
 
   static async getChannelDetails(
     channelIds: string[],
-    user?: User
+    user?: User | null
   ): Promise<any[]> {
     if (channelIds.length === 0) return [];
 
@@ -170,7 +170,7 @@ export class YouTubeService {
 
   private static async enrichVideos(
     videos: any[],
-    user?: User
+    user?: User | null
   ): Promise<any[]> {
     if (videos.length === 0) return [];
 
@@ -220,7 +220,7 @@ export class YouTubeService {
 
   static async getPopularVideos(
     maxResults: number = 24,
-    user?: User
+    user?: User | null
   ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
     try {
       const regionCode = await RegionHelper.getRegionCode();
@@ -255,7 +255,7 @@ export class YouTubeService {
   static async searchVideos(
     query: string = "trending",
     maxResults: number = 24,
-    user?: User
+    user?: User | null
   ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
     try {
       // Step 1: Search for videos
@@ -317,7 +317,7 @@ export class YouTubeService {
   static async getRelatedVideos(
     currentVideo: any,
     maxResults: number = 12,
-    user?: User
+    user?: User | null
   ): Promise<YouTubeSearchResponse> {
     const currentVideoId =
       typeof currentVideo.id === "string"
@@ -417,7 +417,10 @@ export class YouTubeService {
   }
 
   // 🎯 GET SINGLE VIDEO BY ID
-  static async getVideoById(videoId: string, user?: User): Promise<any | null> {
+  static async getVideoById(
+    videoId: string,
+    user?: User | null
+  ): Promise<any | null> {
     const params = new URLSearchParams({
       part: "snippet,contentDetails,statistics",
       id: videoId,
@@ -440,7 +443,7 @@ export class YouTubeService {
     categoryId: string,
     count: number,
     excludeId: string,
-    user?: User
+    user?: User | null
   ): Promise<void> {
     try {
       const params = new URLSearchParams({
@@ -472,7 +475,7 @@ export class YouTubeService {
     title: string,
     count: number,
     excludeId: string,
-    user?: User
+    user?: User | null
   ): Promise<void> {
     try {
       const keywords = title
@@ -513,7 +516,7 @@ export class YouTubeService {
     channelId: string,
     count: number,
     excludeId: string,
-    user?: User
+    user?: User | null
   ): Promise<void> {
     try {
       const params = new URLSearchParams({
@@ -629,7 +632,7 @@ export class YouTubeService {
   static async getVideosByCategory(
     categoryId: string,
     maxResults: number = 24,
-    user?: User
+    user?: User | null
   ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
     try {
       if (categoryId === "all") {
