@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSettings } from '@/contexts/SettingsContext';
+import { DataUsage, FontType, PlaybackSpeed, Theme, useSettings, VideoQuality } from '@/contexts/SettingsContext';
 import { useTheme } from '@/hooks/useTheme';
 import Header from '@/components/Header';
 import { 
@@ -127,7 +127,7 @@ export default function SettingsPage() {
                   return (
                     <button
                       key={themeOption.id}
-                      onClick={() => updateSetting('theme', themeOption.id as any)}
+                      onClick={() => updateSetting('theme', themeOption.id as Theme)}
                       className={`p-4 border-3 ${classes.border} transition-all duration-150 ${
                         isSelected 
                           ? `${themeOption.bg} ${classes.shadow} transform translate-x-[2px] translate-y-[2px]`
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                 <h3 className={`font-black uppercase mb-2 ${classes.primaryText}`}>DEFAULT VIDEO QUALITY</h3>
                 <select
                   value={settings.defaultQuality}
-                  onChange={(e) => updateSetting('defaultQuality', e.target.value as any)}
+                  onChange={(e) => updateSetting('defaultQuality', e.target.value as VideoQuality)}
                   className={`w-full p-3 font-bold ${getSelectStyles()}`}
                 >
                   <option value="auto">AUTO (Recommended)</option>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
                 <h3 className={`font-black uppercase mb-2 ${classes.primaryText}`}>DEFAULT PLAYBACK SPEED</h3>
                 <select
                   value={settings.defaultSpeed}
-                  onChange={(e) => updateSetting('defaultSpeed', parseFloat(e.target.value) as any)}
+                  onChange={(e) => updateSetting('defaultSpeed', parseFloat(e.target.value) as PlaybackSpeed)}
                   className={`w-full p-3 font-bold ${getSelectStyles()}`}
                 >
                   <option value={0.25}>0.25x (Very Slow)</option>
@@ -259,7 +259,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className={`font-black uppercase ${classes.primaryText}`}>SAVE WATCH HISTORY</h3>
-                  <p className={`text-sm ${classes.secondaryText} font-bold`}>Keep track of videos you've watched</p>
+                  <p className={`text-sm ${classes.secondaryText} font-bold`}>Keep track of videos you&apos;ve watched</p>
                 </div>
                 <button
                   onClick={() => updateSetting('saveWatchHistory', !settings.saveWatchHistory)}
@@ -288,7 +288,7 @@ export default function SettingsPage() {
                 <h3 className={`font-black uppercase mb-2 ${classes.primaryText}`}>DATA USAGE</h3>
                 <select
                   value={settings.dataUsage}
-                  onChange={(e) => updateSetting('dataUsage', e.target.value as any)}
+                  onChange={(e) => updateSetting('dataUsage', e.target.value as DataUsage)}
                   className={`w-full p-3 font-bold ${getSelectStyles()}`}
                 >
                   <option value="unlimited">UNLIMITED (Best Quality)</option>
@@ -319,7 +319,6 @@ export default function SettingsPage() {
                     <p className={`text-sm ${classes.secondaryText} font-bold`}>{notification.desc}</p>
                   </div>
                   <button
-                    onClick={() => updateSetting(notification.key as any, !settings[notification.key as keyof typeof settings])}
                     className={`px-4 py-2 ${classes.borderThick} font-black uppercase transition-all duration-150 ${getToggleButtonStyles(settings[notification.key as keyof typeof settings] as boolean)} ${classes.shadow}`}
                   >
                     {settings[notification.key as keyof typeof settings] ? 'ON' : 'OFF'}
@@ -371,7 +370,7 @@ export default function SettingsPage() {
                 <h3 className={`font-black uppercase mb-2 ${classes.primaryText}`}>FONT SIZE</h3>
                 <select
                   value={settings.fontSize}
-                  onChange={(e) => updateSetting('fontSize', e.target.value as any)}
+                  onChange={(e) => updateSetting('fontSize', e.target.value as FontType)}
                   className={`w-full p-3 font-bold ${getSelectStyles()}`}
                 >
                   <option value="small">SMALL</option>

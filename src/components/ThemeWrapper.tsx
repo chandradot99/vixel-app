@@ -1,6 +1,5 @@
 'use client';
 
-import { useTheme } from '@/hooks/useTheme';
 import { useSettings } from '@/contexts/SettingsContext';
 
 interface ThemeWrapperProps {
@@ -8,7 +7,6 @@ interface ThemeWrapperProps {
 }
 
 export default function ThemeWrapper({ children }: ThemeWrapperProps) {
-  const { classes } = useTheme();
   const { settings } = useSettings();
 
   // Get theme-specific body background

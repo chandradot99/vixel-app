@@ -151,9 +151,9 @@ export default function VideoInfo({ video }: VideoInfoProps) {
             {/* Channel Info */}
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 border-2 ${classes.border} ${classes.shadow} overflow-hidden`}>
-                {(video as any).channelAvatar ? (
+                {(video as YouTubeVideo).channelAvatar ? (
                   <Image
-                    src={(video as any).channelAvatar}
+                    src={(video).channelAvatar || ""}
                     alt={snippet.channelTitle}
                     width={48}
                     height={48}
@@ -179,7 +179,7 @@ export default function VideoInfo({ video }: VideoInfoProps) {
                   <div className="flex items-center gap-1">
                     <Eye className={`w-4 h-4 ${classes.primaryText}`} />
                     <span className={`font-bold uppercase ${classes.primaryText}`}>
-                      {(video as any).formattedViewCount || '0'} VIEWS
+                      {(video as YouTubeVideo).formattedViewCount || '0'} VIEWS
                     </span>
                   </div>
                 </div>

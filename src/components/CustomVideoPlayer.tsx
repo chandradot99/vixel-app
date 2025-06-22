@@ -17,17 +17,97 @@ import {
 } from 'lucide-react';
 
 // YouTube Player API types
+interface YTPlayer {
+  destroy(): void;
+  getDuration(): number;
+  getVolume(): number;
+  getCurrentTime(): number;
+  pauseVideo(): void;
+  playVideo(): void;
+  seekTo(seconds: number): void;
+  setVolume(volume: number): void;
+  mute(): void;
+  unMute(): void;
+}
+
+interface YTPlayerVars {
+  autoplay: number;
+  controls: number;
+  modestbranding: number;
+  rel: number;
+  showinfo: number;
+  iv_load_policy: number;
+  fs: number;
+  disablekb: number;
+}
+
+interface YTPlayerEvents {
+  onReady: () => void;
+  onStateChange: (event: YTStateChangeEvent) => void;
+}
+
+interface YTStateChangeEvent {
+  data: number;
+}
+
+interface YTPlayerState {
+  UNSTARTED: number;
+  ENDED: number;
+  PLAYING: number;
+  PAUSED: number;
+  BUFFERING: number;
+  CUED: number;
+}
+
+interface YouTubeAPI {
+  Player: new (
+    element: HTMLElement,
+    config: {
+      videoId: string;
+      width: string;
+      height: string;
+      playerVars: YTPlayerVars;
+      events: YTPlayerEvents;
+    }
+  ) => YTPlayer;
+  PlayerState: YTPlayerState;
+}
+
 declare global {
   interface Window {
-    YT: any;
+    YT: YouTubeAPI;
     onYouTubeIframeAPIReady: () => void;
   }
+}
+
+interface VideoId {
+  kind: string;
+  videoId: string;
 }
 
 interface CustomVideoPlayerProps {
   videoId: string;
   video: YouTubeVideo;
   relatedVideos?: YouTubeVideo[];
+}
+
+interface ProgressBarColors {
+  bg: string;
+  progress: string;
+  border: string;
+}
+
+interface VolumeBarColors {
+  bg: string;
+  volume: string;
+  border: string;
+}
+
+interface ButtonColors {
+  primary: string;
+  secondary: string;
+  success: string;
+  warning: string;
 }
 
 export default function CustomVideoPlayer({ 
@@ -38,32 +118,32 @@ export default function CustomVideoPlayer({
   const router = useRouter();
   const { theme, classes } = useTheme();
   const playerRef = useRef<HTMLDivElement>(null);
-  const ytPlayerRef = useRef<any>(null);
+  const ytPlayerRef = useRef<YTPlayer | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  const [isReady, setIsReady] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(80);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showControls, setShowControls] = useState(true);
-  const [autoplayEnabled, setAutoplayEnabled] = useState(true);
-  const [showAutoplayOverlay, setShowAutoplayOverlay] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isReady, setIsReady] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+  const [volume, setVolume] = useState<number>(80);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showControls, setShowControls] = useState<boolean>(true);
+  const [autoplayEnabled, setAutoplayEnabled] = useState<boolean>(true);
+  const [showAutoplayOverlay, setShowAutoplayOverlay] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Get next video for autoplay
-  const getNextVideo = () => {
+  const getNextVideo = (): YouTubeVideo | null => {
     return relatedVideos.length > 0 ? relatedVideos[0] : null;
   };
 
   const nextVideo = getNextVideo();
 
   // Auto-hide controls
-  const resetControlsTimeout = () => {
+  const resetControlsTimeout = (): void => {
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
@@ -77,7 +157,7 @@ export default function CustomVideoPlayer({
 
   // Load YouTube API
   useEffect(() => {
-    const loadYouTubeAPI = () => {
+    const loadYouTubeAPI = (): void => {
       if (window.YT) {
         initializePlayer();
         return;
@@ -105,7 +185,7 @@ export default function CustomVideoPlayer({
     };
   }, [videoId]);
 
-  const initializePlayer = () => {
+  const initializePlayer = (): void => {
     if (!playerRef.current || !window.YT) return;
 
     ytPlayerRef.current = new window.YT.Player(playerRef.current, {
@@ -129,7 +209,9 @@ export default function CustomVideoPlayer({
     });
   };
 
-  const onPlayerReady = () => {
+  const onPlayerReady = (): void => {
+    if (!ytPlayerRef.current) return;
+    
     setIsReady(true);
     setIsLoading(false);
     setDuration(ytPlayerRef.current.getDuration());
@@ -145,7 +227,7 @@ export default function CustomVideoPlayer({
     return () => clearInterval(interval);
   };
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange = (event: YTStateChangeEvent): void => {
     const playerState = event.data;
     
     switch (playerState) {
@@ -171,7 +253,7 @@ export default function CustomVideoPlayer({
   };
 
   // Control functions
-  const togglePlay = () => {
+  const togglePlay = (): void => {
     if (!ytPlayerRef.current) return;
     
     if (isPlaying) {
@@ -182,13 +264,13 @@ export default function CustomVideoPlayer({
     resetControlsTimeout();
   };
 
-  const seekTo = (seconds: number) => {
+  const seekTo = (seconds: number): void => {
     if (!ytPlayerRef.current) return;
     ytPlayerRef.current.seekTo(seconds);
     resetControlsTimeout();
   };
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>): void => {
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
@@ -196,7 +278,7 @@ export default function CustomVideoPlayer({
     seekTo(newTime);
   };
 
-  const setPlayerVolume = (newVolume: number) => {
+  const setPlayerVolume = (newVolume: number): void => {
     if (!ytPlayerRef.current) return;
     ytPlayerRef.current.setVolume(newVolume);
     setVolume(newVolume);
@@ -204,7 +286,7 @@ export default function CustomVideoPlayer({
     resetControlsTimeout();
   };
 
-  const toggleMute = () => {
+  const toggleMute = (): void => {
     if (!ytPlayerRef.current) return;
     
     if (isMuted) {
@@ -217,32 +299,46 @@ export default function CustomVideoPlayer({
     resetControlsTimeout();
   };
 
-  const skipTime = (seconds: number) => {
+  const skipTime = (seconds: number): void => {
     const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
     seekTo(newTime);
   };
 
+  // Fullscreen types
+  interface FullscreenElement extends HTMLElement {
+    webkitRequestFullscreen?: () => Promise<void>;
+    msRequestFullscreen?: () => Promise<void>;
+  }
+
+  interface FullscreenDocument extends Document {
+    webkitExitFullscreen?: () => Promise<void>;
+    msExitFullscreen?: () => Promise<void>;
+  }
+
   // Fixed fullscreen implementation
-  const toggleFullscreen = () => {
+  const toggleFullscreen = (): void => {
     if (!containerRef.current) return;
+
+    const container = containerRef.current as FullscreenElement;
+    const doc = document as FullscreenDocument;
 
     if (!document.fullscreenElement) {
       // Enter fullscreen
-      if (containerRef.current.requestFullscreen) {
-        containerRef.current.requestFullscreen().catch(console.error);
-      } else if ((containerRef.current as any).webkitRequestFullscreen) {
-        (containerRef.current as any).webkitRequestFullscreen();
-      } else if ((containerRef.current as any).msRequestFullscreen) {
-        (containerRef.current as any).msRequestFullscreen();
+      if (container.requestFullscreen) {
+        container.requestFullscreen().catch(console.error);
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen().catch(console.error);
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen().catch(console.error);
       }
     } else {
       // Exit fullscreen
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(console.error);
-      } else if ((document as any).webkitExitFullscreen) {
-        (document as any).webkitExitFullscreen();
-      } else if ((document as any).msExitFullscreen) {
-        (document as any).msExitFullscreen();
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(console.error);
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen().catch(console.error);
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen().catch(console.error);
       }
     }
     resetControlsTimeout();
@@ -250,7 +346,7 @@ export default function CustomVideoPlayer({
 
   // Fullscreen event listener
   useEffect(() => {
-    const handleFullscreenChange = () => {
+    const handleFullscreenChange = (): void => {
       setIsFullscreen(!!document.fullscreenElement);
     };
 
@@ -266,19 +362,19 @@ export default function CustomVideoPlayer({
   }, []);
 
   // Mouse move handler
-  const handleMouseMove = () => {
+  const handleMouseMove = (): void => {
     resetControlsTimeout();
   };
 
   // Autoplay functions
-  const startAutoplayCountdown = () => {
+  const startAutoplayCountdown = (): void => {
     if (!nextVideo) return;
     
     setShowAutoplayOverlay(true);
     setCountdown(5);
     
     const timer = setInterval(() => {
-      setCountdown((prev) => {
+      setCountdown((prev: number) => {
         if (prev <= 1) {
           clearInterval(timer);
           playNextVideo();
@@ -289,39 +385,41 @@ export default function CustomVideoPlayer({
     }, 1000);
   };
 
-  const playNextVideo = () => {
+  const playNextVideo = (): void => {
     if (nextVideo) {
-      const nextVideoId = typeof nextVideo.id === 'string' ? nextVideo.id : nextVideo.id.videoId;
+      const nextVideoId = typeof nextVideo.id === 'string' 
+        ? nextVideo.id 
+        : (nextVideo.id as VideoId).videoId;
       router.push(`/watch?v=${nextVideoId}`);
     }
   };
 
-  const cancelAutoplay = () => {
+  const cancelAutoplay = (): void => {
     setShowAutoplayOverlay(false);
     setCountdown(0);
   };
 
   // Format time helper
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Theme-aware helper functions
-  const getProgressBarColors = () => {
+  const getProgressBarColors = (): ProgressBarColors => {
     if (theme === 'dark') return { bg: 'bg-gray-700', progress: 'bg-blue-500', border: 'border-gray-500' };
     if (theme === 'light') return { bg: 'bg-gray-300', progress: 'bg-blue-500', border: 'border-gray-400' };
     return { bg: 'bg-gray-800', progress: 'bg-yellow-400', border: 'border-white' };
   };
 
-  const getVolumeBarColors = () => {
+  const getVolumeBarColors = (): VolumeBarColors => {
     if (theme === 'dark') return { bg: 'bg-gray-700', volume: 'bg-green-500', border: 'border-gray-500' };
     if (theme === 'light') return { bg: 'bg-gray-300', volume: 'bg-green-500', border: 'border-gray-400' };
     return { bg: 'bg-gray-800', volume: 'bg-green-400', border: 'border-white' };
   };
 
-  const getControlButtonColors = () => {
+  const getControlButtonColors = (): ButtonColors => {
     if (theme === 'dark') {
       return {
         primary: 'bg-red-600 hover:bg-red-700',
@@ -538,10 +636,10 @@ export default function CustomVideoPlayer({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className={`${theme === 'brutal' ? 'bg-red-500' : 'bg-red-600'} ${classes.border} border-2 px-3 py-1 text-white font-black text-sm uppercase`}>
-                {(video as any).formattedDuration || formatTime(duration)}
+                {video.formattedDuration || formatTime(duration)}
               </div>
               <div className={`${theme === 'brutal' ? 'bg-blue-500' : 'bg-blue-600'} ${classes.border} border-2 px-3 py-1 text-white font-black text-sm uppercase`}>
-                {(video as any).formattedViewCount || '0'} VIEWS
+                {video.formattedViewCount || '0'} VIEWS
               </div>
             </div>
             

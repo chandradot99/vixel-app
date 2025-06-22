@@ -1,18 +1,127 @@
-import { YouTubeSearchResponse } from "@/types/youtube";
+import { YouTubeSearchResponse, YouTubeVideo } from "@/types/youtube";
 import { RegionHelper } from "./regionHelper";
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3";
 
-interface User {
+// User interface
+export interface User {
   accessToken?: string;
 }
 
+// API Error interface
 export interface APIError {
   type: "quota" | "network" | "not_found" | "unauthorized" | "unknown";
   message: string;
   userMessage: string;
   canRetry: boolean;
+}
+
+// YouTube API Response Types
+interface YouTubeAPIError {
+  error?: {
+    message?: string;
+    code?: number;
+    errors?: Array<{
+      domain: string;
+      reason: string;
+      message: string;
+    }>;
+  };
+}
+
+interface PageInfo {
+  totalResults: number;
+  resultsPerPage: number;
+}
+
+interface YouTubeChannelDetails {
+  id: string;
+  snippet: {
+    title: string;
+    description: string;
+    thumbnails: {
+      default?: { url: string };
+      medium?: { url: string };
+      high?: { url: string };
+    };
+  };
+  statistics: {
+    viewCount: string;
+    subscriberCount: string;
+    videoCount: string;
+  };
+}
+
+interface YouTubeVideoDetails {
+  id: string;
+  snippet: {
+    publishedAt: string;
+    channelId: string;
+    title: string;
+    description: string;
+    thumbnails: {
+      default: { url: string; width: number; height: number };
+      medium: { url: string; width: number; height: number };
+      high: { url: string; width: number; height: number };
+    };
+    channelTitle: string;
+    categoryId?: string;
+    liveBroadcastContent: string;
+  };
+  contentDetails?: {
+    duration: string;
+    dimension: string;
+    definition: string;
+    caption: string;
+  };
+  statistics?: {
+    viewCount: string;
+    likeCount: string;
+    dislikeCount: string;
+    favoriteCount: string;
+    commentCount: string;
+  };
+}
+
+interface EnrichedYouTubeVideo extends YouTubeVideoDetails {
+  formattedDuration: string;
+  formattedViewCount: string;
+  channelAvatar: string | null;
+  channelSubscribers: string | null;
+}
+
+interface SearchResult {
+  id: {
+    kind: string;
+    videoId: string;
+  };
+  snippet: {
+    publishedAt: string;
+    channelId: string;
+    title: string;
+    description: string;
+    thumbnails: {
+      default: { url: string };
+      medium: { url: string };
+      high: { url: string };
+    };
+    channelTitle: string;
+  };
+}
+
+// Service Response Types
+interface ServiceResponse<T> {
+  items: T[];
+  pageInfo: PageInfo;
+  error?: APIError;
+}
+
+// Extended Error with additional properties
+interface ExtendedError extends Error {
+  status?: number;
+  data?: YouTubeAPIError;
+  code?: string;
 }
 
 export class YouTubeService {
@@ -35,12 +144,14 @@ export class YouTubeService {
     return `${YOUTUBE_API_BASE_URL}/${endpoint}?${params}`;
   }
 
-  private static handleAPIError(error: any): APIError {
+  private static handleAPIError(error: unknown): APIError {
+    const err = error as ExtendedError;
+
     // Handle quota exceeded
     if (
-      error.message?.includes("quota") ||
-      error.message?.includes("quotaExceeded") ||
-      (error.status === 403 && error.message?.includes("exceeded"))
+      err.message?.includes("quota") ||
+      err.message?.includes("quotaExceeded") ||
+      (err.status === 403 && err.message?.includes("exceeded"))
     ) {
       return {
         type: "quota",
@@ -52,7 +163,7 @@ export class YouTubeService {
     }
 
     // Handle network errors
-    if (error.name === "NetworkError" || error.code === "NETWORK_ERROR") {
+    if (err.name === "NetworkError" || err.code === "NETWORK_ERROR") {
       return {
         type: "network",
         message: "Network connection failed",
@@ -62,7 +173,7 @@ export class YouTubeService {
     }
 
     // Handle 404 - Not Found
-    if (error.status === 404) {
+    if (err.status === 404) {
       return {
         type: "not_found",
         message: "Resource not found",
@@ -73,7 +184,7 @@ export class YouTubeService {
     }
 
     // Handle 401 - Unauthorized
-    if (error.status === 401) {
+    if (err.status === 401) {
       return {
         type: "unauthorized",
         message: "Unauthorized access",
@@ -85,7 +196,7 @@ export class YouTubeService {
     // Default unknown error
     return {
       type: "unknown",
-      message: error.message || "Unknown error occurred",
+      message: err.message || "Unknown error occurred",
       userMessage: "Something went wrong! Please try again in a few minutes.",
       canRetry: true,
     };
@@ -98,20 +209,22 @@ export class YouTubeService {
     );
   }
 
-  private static async fetchYouTubeApi(url: string): Promise<any> {
+  private static async fetchYouTubeApi(url: string): Promise<unknown> {
     try {
       const response = await fetch(url);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData: YouTubeAPIError = await response
+          .json()
+          .catch(() => ({}));
 
         // Create error object with API response data
-        const error = new Error(
+        const error: ExtendedError = new Error(
           errorData.error?.message ||
             `YouTube API error: ${response.status} - ${response.statusText}`
         );
-        (error as any).status = response.status;
-        (error as any).data = errorData;
+        error.status = response.status;
+        error.data = errorData;
 
         throw error;
       }
@@ -127,9 +240,9 @@ export class YouTubeService {
     const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) return "0:00";
 
-    const hours = parseInt(match[1] || "0");
-    const minutes = parseInt(match[2] || "0");
-    const seconds = parseInt(match[3] || "0");
+    const hours = parseInt(match[1] || "0", 10);
+    const minutes = parseInt(match[2] || "0", 10);
+    const seconds = parseInt(match[3] || "0", 10);
 
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
@@ -141,7 +254,7 @@ export class YouTubeService {
   }
 
   static formatViewCount(count: string): string {
-    const num = parseInt(count);
+    const num = parseInt(count, 10);
     if (num >= 1000000000) {
       return `${(num / 1000000000).toFixed(1)}B`;
     } else if (num >= 1000000) {
@@ -155,30 +268,32 @@ export class YouTubeService {
   static async getChannelDetails(
     channelIds: string[],
     user?: User | null
-  ): Promise<any[]> {
+  ): Promise<YouTubeChannelDetails[]> {
     if (channelIds.length === 0) return [];
 
     const params = new URLSearchParams({
-      part: "snippet,statistics", // Include stats for subscriber count
+      part: "snippet,statistics",
       id: channelIds.join(","),
     });
 
     const url = this.buildApiUrl("channels", params, user);
-    const data = await this.fetchYouTubeApi(url);
+    const data = (await this.fetchYouTubeApi(url)) as {
+      items?: YouTubeChannelDetails[];
+    };
     return data.items || [];
   }
 
   private static async enrichVideos(
-    videos: any[],
+    videos: YouTubeVideoDetails[],
     user?: User | null
-  ): Promise<any[]> {
+  ): Promise<EnrichedYouTubeVideo[]> {
     if (videos.length === 0) return [];
 
     // Get unique channel IDs
     const channelIds = [...new Set(videos.map((v) => v.snippet.channelId))];
     const channelDetails = await this.getChannelDetails(channelIds, user);
 
-    return videos.map((video) => {
+    return videos.map((video): EnrichedYouTubeVideo => {
       const channel = channelDetails.find(
         (ch) => ch.id === video.snippet.channelId
       );
@@ -201,15 +316,17 @@ export class YouTubeService {
     });
   }
 
-  private static filterShorts(videos: any[]): any[] {
+  private static filterShorts(
+    videos: YouTubeVideoDetails[]
+  ): YouTubeVideoDetails[] {
     return videos.filter((video) => {
       if (video.contentDetails?.duration) {
         const duration = video.contentDetails.duration;
         const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
         if (match) {
-          const hours = parseInt(match[1] || "0");
-          const minutes = parseInt(match[2] || "0");
-          const seconds = parseInt(match[3] || "0");
+          const hours = parseInt(match[1] || "0", 10);
+          const minutes = parseInt(match[2] || "0", 10);
+          const seconds = parseInt(match[3] || "0", 10);
           const totalSeconds = hours * 3600 + minutes * 60 + seconds;
           return totalSeconds >= 60; // Exclude videos under 60 seconds
         }
@@ -221,7 +338,7 @@ export class YouTubeService {
   static async getPopularVideos(
     maxResults: number = 24,
     user?: User | null
-  ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
+  ): Promise<ServiceResponse<EnrichedYouTubeVideo>> {
     try {
       const regionCode = await RegionHelper.getRegionCode();
 
@@ -233,7 +350,10 @@ export class YouTubeService {
       });
 
       const url = this.buildApiUrl("videos", params, user);
-      const data = await this.fetchYouTubeApi(url);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items: YouTubeVideoDetails[];
+        pageInfo: PageInfo;
+      };
 
       const filteredVideos = this.filterShorts(data.items);
       const enrichedVideos = await this.enrichVideos(filteredVideos, user);
@@ -256,7 +376,7 @@ export class YouTubeService {
     query: string = "trending",
     maxResults: number = 24,
     user?: User | null
-  ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
+  ): Promise<ServiceResponse<EnrichedYouTubeVideo>> {
     try {
       // Step 1: Search for videos
       const searchParams = new URLSearchParams({
@@ -272,7 +392,10 @@ export class YouTubeService {
       });
 
       const searchUrl = this.buildApiUrl("search", searchParams, user);
-      const searchData = await this.fetchYouTubeApi(searchUrl);
+      const searchData = (await this.fetchYouTubeApi(searchUrl)) as {
+        items: SearchResult[];
+        pageInfo: PageInfo;
+      };
 
       if (!searchData.items?.length) {
         return {
@@ -288,14 +411,16 @@ export class YouTubeService {
       }
 
       // Step 2: Get video details
-      const videoIds = searchData.items.map((v: any) => v.id.videoId).join(",");
+      const videoIds = searchData.items.map((v) => v.id.videoId).join(",");
       const detailsParams = new URLSearchParams({
         part: "snippet,contentDetails,statistics",
         id: videoIds,
       });
 
       const detailsUrl = this.buildApiUrl("videos", detailsParams, user);
-      const detailsData = await this.fetchYouTubeApi(detailsUrl);
+      const detailsData = (await this.fetchYouTubeApi(detailsUrl)) as {
+        items: YouTubeVideoDetails[];
+      };
 
       const filteredVideos = this.filterShorts(detailsData.items);
       const enrichedVideos = await this.enrichVideos(filteredVideos, user);
@@ -315,7 +440,7 @@ export class YouTubeService {
   }
 
   static async getRelatedVideos(
-    currentVideo: any,
+    currentVideo: YouTubeVideo,
     maxResults: number = 12,
     user?: User | null
   ): Promise<YouTubeSearchResponse> {
@@ -326,20 +451,22 @@ export class YouTubeService {
 
     try {
       // Strategy 1: Get video category for better matching
-      let categoryId = null;
+      let categoryId: string | null = null;
       if (!currentVideo.snippet.categoryId) {
         const videoParams = new URLSearchParams({
           part: "snippet",
           id: currentVideoId,
         });
         const videoUrl = this.buildApiUrl("videos", videoParams, user);
-        const videoData = await this.fetchYouTubeApi(videoUrl);
-        categoryId = videoData.items?.[0]?.snippet?.categoryId;
+        const videoData = (await this.fetchYouTubeApi(videoUrl)) as {
+          items?: Array<{ snippet: { categoryId: string } }>;
+        };
+        categoryId = videoData.items?.[0]?.snippet?.categoryId || null;
       } else {
         categoryId = currentVideo.snippet.categoryId;
       }
 
-      const relatedVideos: any[] = [];
+      const relatedVideos: SearchResult[] = [];
 
       // Method 1: Category-based videos (40% of results)
       if (categoryId) {
@@ -393,7 +520,9 @@ export class YouTubeService {
       });
 
       const detailsUrl = this.buildApiUrl("videos", detailsParams, user);
-      const detailsData = await this.fetchYouTubeApi(detailsUrl);
+      const detailsData = (await this.fetchYouTubeApi(detailsUrl)) as {
+        items: YouTubeVideoDetails[];
+      };
 
       const enrichedVideos = await this.enrichVideos(detailsData.items, user);
 
@@ -416,30 +545,36 @@ export class YouTubeService {
     }
   }
 
-  // 🎯 GET SINGLE VIDEO BY ID
   static async getVideoById(
     videoId: string,
     user?: User | null
-  ): Promise<any | null> {
-    const params = new URLSearchParams({
-      part: "snippet,contentDetails,statistics",
-      id: videoId,
-    });
+  ): Promise<EnrichedYouTubeVideo | null> {
+    try {
+      const params = new URLSearchParams({
+        part: "snippet,contentDetails,statistics",
+        id: videoId,
+      });
 
-    const url = this.buildApiUrl("videos", params, user);
-    const data = await this.fetchYouTubeApi(url);
+      const url = this.buildApiUrl("videos", params, user);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items?: YouTubeVideoDetails[];
+      };
 
-    if (!data.items?.length) {
+      if (!data.items?.length) {
+        return null;
+      }
+
+      const enrichedVideos = await this.enrichVideos([data.items[0]], user);
+      return enrichedVideos[0];
+    } catch (error) {
+      console.error("getVideoById error:", error);
       return null;
     }
-
-    const enrichedVideos = await this.enrichVideos([data.items[0]], user);
-    return enrichedVideos[0];
   }
 
-  // 🔥 HELPER: Add category-based videos
+  // Helper methods for related videos
   private static async addCategoryVideos(
-    relatedVideos: any[],
+    relatedVideos: SearchResult[],
     categoryId: string,
     count: number,
     excludeId: string,
@@ -459,19 +594,20 @@ export class YouTubeService {
       });
 
       const url = this.buildApiUrl("search", params, user);
-      const data = await this.fetchYouTubeApi(url);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items: SearchResult[];
+      };
 
       relatedVideos.push(
-        ...data.items.filter((v: any) => v.id.videoId !== excludeId)
+        ...data.items.filter((v) => v.id.videoId !== excludeId)
       );
     } catch (error) {
       console.warn("Category videos fetch failed:", error);
     }
   }
 
-  // 🔥 HELPER: Add keyword-based videos
   private static async addKeywordVideos(
-    relatedVideos: any[],
+    relatedVideos: SearchResult[],
     title: string,
     count: number,
     excludeId: string,
@@ -500,19 +636,20 @@ export class YouTubeService {
       });
 
       const url = this.buildApiUrl("search", params, user);
-      const data = await this.fetchYouTubeApi(url);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items: SearchResult[];
+      };
 
       relatedVideos.push(
-        ...data.items.filter((v: any) => v.id.videoId !== excludeId)
+        ...data.items.filter((v) => v.id.videoId !== excludeId)
       );
     } catch (error) {
       console.warn("Keyword videos fetch failed:", error);
     }
   }
 
-  // 🔥 HELPER: Add channel videos
   private static async addChannelVideos(
-    relatedVideos: any[],
+    relatedVideos: SearchResult[],
     channelId: string,
     count: number,
     excludeId: string,
@@ -529,29 +666,30 @@ export class YouTubeService {
       });
 
       const url = this.buildApiUrl("search", params, user);
-      const data = await this.fetchYouTubeApi(url);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items: SearchResult[];
+      };
 
       relatedVideos.push(
-        ...data.items.filter((v: any) => v.id.videoId !== excludeId)
+        ...data.items.filter((v) => v.id.videoId !== excludeId)
       );
     } catch (error) {
       console.warn("Channel videos fetch failed:", error);
     }
   }
 
-  // 🔥 HELPER: Remove duplicate videos
-  private static removeDuplicateVideos(videos: any[]): any[] {
+  private static removeDuplicateVideos(videos: SearchResult[]): SearchResult[] {
     return videos.filter(
       (video, index, self) =>
         index === self.findIndex((v) => v.id.videoId === video.id.videoId)
     );
   }
 
-  // 🚀 USER-SPECIFIC METHODS (when logged in)
+  // User-specific methods
   static async getUserLikedVideos(
     user: User,
     maxResults: number = 50
-  ): Promise<any[]> {
+  ): Promise<EnrichedYouTubeVideo[]> {
     if (!user.accessToken) {
       throw new Error("User must be authenticated");
     }
@@ -563,7 +701,9 @@ export class YouTubeService {
     });
 
     const url = this.buildApiUrl("videos", params, user);
-    const data = await this.fetchYouTubeApi(url);
+    const data = (await this.fetchYouTubeApi(url)) as {
+      items: YouTubeVideoDetails[];
+    };
 
     return this.enrichVideos(data.items || [], user);
   }
@@ -571,7 +711,7 @@ export class YouTubeService {
   static async getUserSubscriptions(
     user: User,
     maxResults: number = 50
-  ): Promise<any[]> {
+  ): Promise<unknown[]> {
     if (!user.accessToken) {
       throw new Error("User must be authenticated");
     }
@@ -583,7 +723,7 @@ export class YouTubeService {
     });
 
     const url = this.buildApiUrl("subscriptions", params, user);
-    const data = await this.fetchYouTubeApi(url);
+    const data = (await this.fetchYouTubeApi(url)) as { items?: unknown[] };
 
     return data.items || [];
   }
@@ -593,13 +733,14 @@ export class YouTubeService {
     maxResults: number = 24
   ): Promise<YouTubeSearchResponse> {
     if (!user.accessToken) {
-      // Fall back to popular videos for non-authenticated users
-      return this.getPopularVideos(maxResults);
+      const popularResult = await this.getPopularVideos(maxResults);
+      return {
+        items: popularResult.items,
+        pageInfo: popularResult.pageInfo,
+      };
     }
 
     try {
-      // This could use user's watch history, liked videos, subscriptions
-      // For now, we'll use the activities endpoint or fall back to popular
       const params = new URLSearchParams({
         part: "snippet,contentDetails",
         home: "true",
@@ -607,11 +748,17 @@ export class YouTubeService {
       });
 
       const url = this.buildApiUrl("activities", params, user);
-      const data = await this.fetchYouTubeApi(url);
+      const data = (await this.fetchYouTubeApi(url)) as {
+        items?: YouTubeVideoDetails[];
+        pageInfo: PageInfo;
+      };
 
-      // Process activities data or fall back to popular videos
       if (!data.items?.length) {
-        return this.getPopularVideos(maxResults, user);
+        const popularResult = await this.getPopularVideos(maxResults, user);
+        return {
+          items: popularResult.items,
+          pageInfo: popularResult.pageInfo,
+        };
       }
 
       const enrichedVideos = await this.enrichVideos(data.items, user);
@@ -625,7 +772,11 @@ export class YouTubeService {
         "Personalized recommendations failed, falling back to popular:",
         error
       );
-      return this.getPopularVideos(maxResults, user);
+      const popularResult = await this.getPopularVideos(maxResults, user);
+      return {
+        items: popularResult.items,
+        pageInfo: popularResult.pageInfo,
+      };
     }
   }
 
@@ -633,7 +784,7 @@ export class YouTubeService {
     categoryId: string,
     maxResults: number = 24,
     user?: User | null
-  ): Promise<{ items: any[]; pageInfo: any; error?: APIError }> {
+  ): Promise<ServiceResponse<EnrichedYouTubeVideo>> {
     try {
       if (categoryId === "all") {
         return this.getPopularVideos(maxResults, user);
@@ -651,7 +802,10 @@ export class YouTubeService {
       const popularUrl = this.buildApiUrl("videos", popularParams, user);
 
       try {
-        const popularData = await this.fetchYouTubeApi(popularUrl);
+        const popularData = (await this.fetchYouTubeApi(popularUrl)) as {
+          items: YouTubeVideoDetails[];
+          pageInfo: PageInfo;
+        };
 
         if (popularData.items?.length > 0) {
           const filteredVideos = this.filterShorts(popularData.items);

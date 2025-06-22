@@ -14,6 +14,7 @@ export interface YouTubeVideo {
   };
   formattedDuration: string;
   formattedViewCount: string;
+  channelAvatar?: string;
 }
 
 export interface YouTubeSearchResponse {

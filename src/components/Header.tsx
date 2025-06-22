@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
-import { useSettings } from '@/contexts/SettingsContext';
+import { Theme, useSettings } from '@/contexts/SettingsContext';
 import LoginModal from './LoginModal';
 import { 
   Search, 
@@ -48,7 +48,7 @@ export default function Header({ onMenuClick, onSearch }: HeaderProps) {
     setShowUserMenu(false);
   };
 
-  const handleThemeChange = (newTheme: 'brutal' | 'dark' | 'light') => {
+  const handleThemeChange = (newTheme: Theme) => {
     updateSetting('theme', newTheme);
     setShowThemeMenu(false);
   };
@@ -150,7 +150,7 @@ export default function Header({ onMenuClick, onSearch }: HeaderProps) {
                         return (
                           <button
                             key={themeOption.id}
-                            onClick={() => handleThemeChange(themeOption.id as any)}
+                            onClick={() => handleThemeChange(themeOption.id as Theme)}
                             className={`w-full flex items-center gap-3 p-3 mb-2 border-2 ${classes.border} transition-all duration-150 ${
                               isSelected 
                                 ? `${themeOption.bg} ${classes.shadow} transform translate-x-[2px] translate-y-[2px]`

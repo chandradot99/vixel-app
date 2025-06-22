@@ -9,7 +9,7 @@ interface Category {
   id: string;
   name: string;
   color: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType;
   apiId?: string;
 }
 

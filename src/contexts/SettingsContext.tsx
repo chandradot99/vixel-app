@@ -6,8 +6,10 @@ import { RegionHelper } from '@/lib/regionHelper';
 export type Theme = 'brutal' | 'dark' | 'light';
 export type VideoQuality = 'auto' | 'high' | 'medium' | 'low';
 export type PlaybackSpeed = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
+export type DataUsage = 'unlimited' | 'wifi-only' | 'limited';
+export type FontType = 'small' | 'medium' | 'large';
 
-interface SettingsData {
+export interface SettingsData {
   // Appearance
   theme: Theme;
   region: string;
@@ -22,7 +24,7 @@ interface SettingsData {
   // Privacy & Data
   saveWatchHistory: boolean;
   personalizedAds: boolean;
-  dataUsage: 'unlimited' | 'wifi-only' | 'limited';
+  dataUsage: DataUsage;
   
   // Notifications
   newVideosFromSubscriptions: boolean;
@@ -32,7 +34,7 @@ interface SettingsData {
   // Accessibility
   reducedMotion: boolean;
   highContrast: boolean;
-  fontSize: 'small' | 'medium' | 'large';
+  fontSize: FontType;
 }
 
 interface SettingsContextType {
