@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { YouTubeVideo } from '../types/youtube';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { User, Calendar, Eye } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { EnrichedYouTubeVideo } from '@/lib/youtube';
 
 interface VideoInfoProps {
-  video: YouTubeVideo;
+  video: EnrichedYouTubeVideo;
 }
 
 export default function VideoInfo({ video }: VideoInfoProps) {
@@ -151,7 +151,7 @@ export default function VideoInfo({ video }: VideoInfoProps) {
             {/* Channel Info */}
             <div className="flex items-center gap-3">
               <div className={`w-12 h-12 border-2 ${classes.border} ${classes.shadow} overflow-hidden`}>
-                {(video as YouTubeVideo).channelAvatar ? (
+                {(video as EnrichedYouTubeVideo).channelAvatar ? (
                   <Image
                     src={(video).channelAvatar || ""}
                     alt={snippet.channelTitle}
@@ -179,7 +179,7 @@ export default function VideoInfo({ video }: VideoInfoProps) {
                   <div className="flex items-center gap-1">
                     <Eye className={`w-4 h-4 ${classes.primaryText}`} />
                     <span className={`font-bold uppercase ${classes.primaryText}`}>
-                      {(video as YouTubeVideo).formattedViewCount || '0'} VIEWS
+                      {(video as EnrichedYouTubeVideo).formattedViewCount || '0'} VIEWS
                     </span>
                   </div>
                 </div>

@@ -110,7 +110,7 @@ export default function CategoryBar({ selectedCategory, onCategoryChange }: Cate
                   }
                 `}
               >
-                <Icon className={`w-4 h-4 ${isSelected ? 'text-white' : classes.primaryText}`} />
+                <Icon />
                 {category.name}
               </button>
             );

@@ -1,3 +1,5 @@
+import { APIError, EnrichedYouTubeVideo } from "@/lib/youtube";
+
 export interface YouTubeVideo {
   id: string;
   snippet: {
@@ -18,10 +20,11 @@ export interface YouTubeVideo {
 }
 
 export interface YouTubeSearchResponse {
-  items: YouTubeVideo[];
+  items: EnrichedYouTubeVideo[];
   nextPageToken?: string;
   pageInfo: {
     totalResults: number;
     resultsPerPage: number;
   };
+  error?: APIError;
 }

@@ -4,8 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useTheme } from '@/hooks/useTheme';
 import Header from '@/components/Header';
-import { YouTubeService, APIError } from '@/lib/youtube';
-import { YouTubeVideo } from '@/types/youtube';
+import { YouTubeService, APIError, EnrichedYouTubeVideo } from '@/lib/youtube';
 import { Loader2, RefreshCw, Wifi, Clock, AlertTriangle, ArrowLeft, Home } from 'lucide-react';
 import RelatedVideos from '@/components/RelatedVideos';
 import VideoInfo from '@/components/VideoInfo';
@@ -17,8 +16,8 @@ function WatchPageContent() {
   const searchParams = useSearchParams();
   const videoId = searchParams.get('v');
   
-  const [video, setVideo] = useState<YouTubeVideo | null>(null);
-  const [relatedVideos, setRelatedVideos] = useState<YouTubeVideo[]>([]);
+  const [video, setVideo] = useState<EnrichedYouTubeVideo | null>(null);
+  const [relatedVideos, setRelatedVideos] = useState<EnrichedYouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<APIError | null>(null);
 

@@ -1,4 +1,4 @@
-import { YouTubeSearchResponse, YouTubeVideo } from "@/types/youtube";
+import { YouTubeSearchResponse } from "@/types/youtube";
 import { RegionHelper } from "./regionHelper";
 
 const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
@@ -84,7 +84,7 @@ interface YouTubeVideoDetails {
   };
 }
 
-interface EnrichedYouTubeVideo extends YouTubeVideoDetails {
+export interface EnrichedYouTubeVideo extends YouTubeVideoDetails {
   formattedDuration: string;
   formattedViewCount: string;
   channelAvatar: string | null;
@@ -440,14 +440,11 @@ export class YouTubeService {
   }
 
   static async getRelatedVideos(
-    currentVideo: YouTubeVideo,
+    currentVideo: EnrichedYouTubeVideo,
     maxResults: number = 12,
     user?: User | null
   ): Promise<YouTubeSearchResponse> {
-    const currentVideoId =
-      typeof currentVideo.id === "string"
-        ? currentVideo.id
-        : currentVideo.id?.videoId;
+    const currentVideoId = currentVideo.id;
 
     try {
       // Strategy 1: Get video category for better matching

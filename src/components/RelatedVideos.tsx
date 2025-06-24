@@ -1,12 +1,12 @@
-import { YouTubeVideo } from '../types/youtube';
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import { User, Clock } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { EnrichedYouTubeVideo } from '@/lib/youtube';
 
 interface RelatedVideosProps {
-  videos: YouTubeVideo[];
+  videos: EnrichedYouTubeVideo[];
 }
 
 export default function RelatedVideos({ videos }: RelatedVideosProps) {
@@ -55,7 +55,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
       {/* Videos List */}
       <div className="p-4 space-y-4">
         {videos.slice(0, 10).map((video) => {
-          const videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
+          const videoId = video.id;
           const publishedDate = formatDistanceToNow(new Date(video.snippet.publishedAt), {
             addSuffix: true,
           });
@@ -78,7 +78,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                   />
                   <div className={`absolute bottom-1 right-1 ${getDurationBadgeBg()} text-white text-xs px-1 py-0.5 font-black border`}>
                     <Clock className="w-2 h-2 inline mr-1" />
-                    {(video as YouTubeVideo).formattedDuration || '0:00'}
+                    {(video as EnrichedYouTubeVideo).formattedDuration || '0:00'}
                   </div>
                 </div>
                 
@@ -93,9 +93,9 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                   
                   <div className="flex items-center gap-2 mb-1">
                     <div className={`w-6 h-6 border ${classes.border} overflow-hidden flex-shrink-0`}>
-                      {(video as YouTubeVideo).channelAvatar ? (
+                      {(video as EnrichedYouTubeVideo).channelAvatar ? (
                         <Image
-                          src={(video as YouTubeVideo).channelAvatar || ""}
+                          src={(video as EnrichedYouTubeVideo).channelAvatar || ""}
                           alt={video.snippet.channelTitle}
                           width={24}
                           height={24}
@@ -113,7 +113,7 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
                   </div>
                   
                   <p className={`${classes.secondaryText} text-xs font-bold uppercase`}>
-                    {(video as YouTubeVideo).formattedViewCount || '0'} VIEWS • {publishedDate.toUpperCase()}
+                    {(video as EnrichedYouTubeVideo).formattedViewCount || '0'} VIEWS • {publishedDate.toUpperCase()}
                   </p>
                 </div>
               </div>

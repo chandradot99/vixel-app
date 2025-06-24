@@ -1,18 +1,18 @@
-import { YouTubeVideo } from '@/types/youtube';
 import { formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Play, User, Clock } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { EnrichedYouTubeVideo } from '@/lib/youtube';
 
 interface VideoCardProps {
-  video: YouTubeVideo;
+  video: EnrichedYouTubeVideo;
 }
 
 export default function VideoCard({ video }: VideoCardProps) {
   const { classes } = useTheme();
   const { snippet } = video;
-  const videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
+  const videoId = video.id;
   
   const publishedDate = formatDistanceToNow(new Date(snippet.publishedAt), {
     addSuffix: true,
@@ -26,8 +26,8 @@ export default function VideoCard({ video }: VideoCardProps) {
   const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-orange-400'];
   const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-  const duration = (video as YouTubeVideo).formattedDuration || '0:00';
-  const viewCount = (video as YouTubeVideo).formattedViewCount || '---';
+  const duration = (video as EnrichedYouTubeVideo).formattedDuration || '0:00';
+  const viewCount = (video as EnrichedYouTubeVideo).formattedViewCount || '---';
 
   return (
     <div className="group cursor-pointer transform hover:translate-x-[3px] hover:translate-y-[3px] transition-transform duration-150">
@@ -63,9 +63,9 @@ export default function VideoCard({ video }: VideoCardProps) {
             <div className="flex gap-2.5">
               {/* Channel Avatar */}
               <div className={`flex-shrink-0 w-9 h-9 ${randomColor} border-2 ${classes.border} flex items-center justify-center shadow-[2px_2px_0px_0px_${classes.border.includes('gray-600') ? '#4b5563' : classes.border.includes('gray-200') ? '#e5e7eb' : '#000'}]`}>
-                {(video as YouTubeVideo).channelAvatar ? (
+                {(video as EnrichedYouTubeVideo).channelAvatar ? (
                   <Image
-                    src={(video as YouTubeVideo).channelAvatar || ""}
+                    src={(video as EnrichedYouTubeVideo).channelAvatar || ""}
                     alt={snippet.channelTitle}
                     width={36}
                     height={36}

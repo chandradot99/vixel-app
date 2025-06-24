@@ -5,8 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import Header from '@/components/Header';
 import CategoryBar from '@/components/CategoryBar';
-import { YouTubeService, APIError } from '@/lib/youtube';
-import { YouTubeVideo } from '@/types/youtube';
+import { YouTubeService, APIError, EnrichedYouTubeVideo } from '@/lib/youtube';
 import VideoCard from '@/components/VideoCard';
 import { RefreshCw, Wifi, Clock, AlertTriangle } from 'lucide-react';
 
@@ -15,7 +14,7 @@ export default function Home() {
   const { theme, classes } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [videos, setVideos] = useState<EnrichedYouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<APIError | null>(null);
 

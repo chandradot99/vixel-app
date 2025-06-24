@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { YouTubeVideo } from '@/types/youtube';
 import { useTheme } from '@/hooks/useTheme';
 import { 
   Play, 
@@ -15,6 +14,7 @@ import {
   SkipBack,
   Loader2
 } from 'lucide-react';
+import { EnrichedYouTubeVideo } from '@/lib/youtube';
 
 // YouTube Player API types
 interface YTPlayer {
@@ -87,8 +87,8 @@ interface VideoId {
 
 interface CustomVideoPlayerProps {
   videoId: string;
-  video: YouTubeVideo;
-  relatedVideos?: YouTubeVideo[];
+  video: EnrichedYouTubeVideo;
+  relatedVideos?: EnrichedYouTubeVideo[];
 }
 
 interface ProgressBarColors {
@@ -136,7 +136,7 @@ export default function CustomVideoPlayer({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Get next video for autoplay
-  const getNextVideo = (): YouTubeVideo | null => {
+  const getNextVideo = (): EnrichedYouTubeVideo | null => {
     return relatedVideos.length > 0 ? relatedVideos[0] : null;
   };
 
@@ -209,7 +209,7 @@ export default function CustomVideoPlayer({
     });
   };
 
-  const onPlayerReady = (): void => {
+  const onPlayerReady = () => {
     if (!ytPlayerRef.current) return;
     
     setIsReady(true);
