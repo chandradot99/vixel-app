@@ -9,23 +9,20 @@ VIXEL is a modern YouTube clone featuring a unique **neubrutalism design** aesth
 ### Brutal Theme (Default)
 *Maximum aggression with bold colors and chunky shadows*
 
-![Brutal Theme Home](./docs/images/brutal-home.png)
-![Brutal Theme Video Player](./docs/images/brutal-player.png)
-![Brutal Theme Settings](./docs/images/brutal-settings.png)
+![Brutal Theme Home](https://ik.imagekit.io/zhcmdyuhw/brutal-home-page.png?updatedAt=1750757076821)
+![Brutal Theme Video Player](https://ik.imagekit.io/zhcmdyuhw/brutal-watch-page.png?updatedAt=1750757076322)
 
 ### Dark Theme
 *Sleek and minimal for late-night viewing*
 
-![Dark Theme Home](./docs/images/dark-home.png)
-![Dark Theme Video Player](./docs/images/dark-player.png)
-![Dark Theme Settings](./docs/images/dark-settings.png)
+![Dark Theme Home](https://ik.imagekit.io/zhcmdyuhw/dark-home-page.png?updatedAt=1750757076585)
+![Dark Theme Video Player](https://ik.imagekit.io/zhcmdyuhw/dark-watch-page.png?updatedAt=1750757076853)
 
 ### Light Theme
 *Clean and bright for professional environments*
 
-![Light Theme Home](./docs/images/light-home.png)
-![Light Theme Video Player](./docs/images/light-player.png)
-![Light Theme Settings](./docs/images/light-settings.png)
+![Light Theme Home](https://ik.imagekit.io/zhcmdyuhw/light-home-page.png?updatedAt=1750757076744)
+![Light Theme Video Player](https://ik.imagekit.io/zhcmdyuhw/light-watch-page.png?updatedAt=1750757076320)
 
 ---
 
